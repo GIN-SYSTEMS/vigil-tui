@@ -24,47 +24,47 @@
 
 ---
 
-## What is vigil?
+## Overview
 
-vigil is a high-resolution terminal dashboard that shows **live wattage, thermals, clock speeds, efficiency scores, and electricity cost** for every major component in your system — all inside the terminal with no browser, no background service, no telemetry.
+vigil is a high-resolution terminal dashboard that shows **live wattage, thermals, clock speeds, efficiency scores, and electricity cost** for every major component — all inside the terminal with no browser, no background service, no telemetry.
 
-It reads directly from hardware sensors (hwmon, RAPL, LibreHardwareMonitor, NVML) and falls back gracefully when sensors are unavailable. Every panel updates in real time, every metric is timestamped, and the whole thing runs from a single `vigil` command.
+It reads directly from hardware sensors (hwmon, RAPL, LibreHardwareMonitor, NVML) and falls back gracefully when a sensor is unavailable. Every panel updates in real time, the whole thing runs from a single `vigil` command.
 
 ---
 
 ## Features
 
 ### Power & Thermals
-- **CPU package power** — hwmon (AMD k10temp / zenpower / amd_energy) → RAPL powercap → LibreHardwareMonitor WMI → CPU% × TDP estimate fallback
-- **GPU power** — NVIDIA via NVML: watts, die temperature, utilisation %, core / memory clocks, VRAM, fan speed
-- **RAM wattage** — DDR4 power model based on slot count and utilisation
-- **Throttle detection** — blinking `THROTTLE` badge when CPU or GPU thermal throttling is detected
+- **CPU package power** — hwmon (k10temp / zenpower / amd_energy) → RAPL → LibreHardwareMonitor WMI → CPU% × TDP estimate
+- **GPU power** — NVIDIA NVML: watts, temperature, utilisation, core/mem clocks, VRAM, fan speed
+- **RAM wattage** — DDR4 power model (slot count × utilisation)
+- **Throttle detection** — blinking `THROTTLE` badge on CPU or GPU thermal throttle
 
 ### Charts & Visualisation
-- **Braille power history chart** — high-resolution CPU + GPU wattage overlay using Unicode Braille characters
-- **Clock history chart** — CPU average frequency and GPU core clock over time with boost ceiling marker
-- **Per-core CPU bars** — utilisation percentage + live frequency for every core with boost detection
+- **Power history** — high-resolution Braille area chart, CPU + GPU overlay
+- **Clock history** — CPU avg frequency + GPU core clock with boost ceiling marker
+- **Per-core bars** — utilisation % + live frequency for every core
 
 ### Process Intelligence
-- **Process table** — top processes ranked by estimated wattage contribution
-- **Sparkline trends** — mini bar chart showing per-process watt history
-- **EST.W column** — estimated watts per process derived from CPU% share of package power
+- **Process table** — ranked by estimated wattage contribution
+- **Sparkline trends** — per-process watt history mini-chart
+- **EST.W column** — watts per process derived from CPU% share of package power
 
 ### Efficiency & Cost
-- **Efficiency score** — performance-per-watt rating: `OPTIMAL` · `NORMAL` · `LOW EFF` · `THROTTLE`
-- **Electricity cost** — ₺/hr, ₺/day, session total with configurable kWh price and currency symbol
-- **Baseline mode** — snapshot idle state, then compare live delta against it in real time
+- **Efficiency score** — `OPTIMAL` · `NORMAL` · `LOW EFF` · `THROTTLE`
+- **Electricity cost** — /hr, /day, session total (configurable kWh price + currency)
+- **Baseline mode** — snapshot idle state, compare live delta in real time
 
 ### Alerts & Logging
-- **Webhook alerts** — HTTP POST to any endpoint when CPU temperature or power threshold is breached
-- **Session logging** — optional JSONL tick log (`--log` flag) for offline analysis
-- **SVG screenshot** — capture the full dashboard as a vector image with `s`
+- **Webhook alerts** — HTTP POST when CPU temp or power threshold is breached
+- **Session logging** — optional JSONL tick log (`--log` flag)
+- **SVG screenshot** — full dashboard export with `s`
 
 ### Themes & UX
 - **TacticalCyberpunk** (dark) — green / amber / cyan on near-black
 - **GhostWhite** (light) — high-contrast monochrome
-- **Setup wizard** — first-run guided configuration for TDP and kWh price
-- **Accent color tweaks** — live recolour via sidebar
+- **Setup wizard** — first-run guided TDP + kWh configuration
+- **Live accent recolour** — sidebar colour tweaks without restart
 
 ---
 
@@ -78,35 +78,37 @@ It reads directly from hardware sensors (hwmon, RAPL, LibreHardwareMonitor, NVML
 
 ### Windows — accurate CPU readings
 
-On Windows, vigil reads real CPU wattage through **LibreHardwareMonitor** WMI. Without it, vigil falls back to a CPU% × TDP estimate.
+vigil reads real CPU wattage through **[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) (MPL-2.0)** via its WMI interface. Without it, vigil falls back to a CPU% × TDP estimate automatically.
 
 1. Download [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases)
 2. Run it **as Administrator**
-3. Launch vigil — it will detect LHM automatically
+3. Launch vigil — LHM is detected automatically
+
+> vigil does not bundle or modify LibreHardwareMonitor. It connects to its WMI interface at runtime. LHM must be running separately.
 
 ---
 
 ## Installation
 
-**Requirements:** Python 3.11 or newer
+**Requirements:** Python 3.11+
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/GIN-SYSTEMS/vigil-tui
 cd vigil-tui
 
 # Linux / macOS
 pip install .
 
-# Windows  (includes WMI + pywin32 for LHM support)
+# Windows (includes WMI + pywin32 for LHM support)
 pip install ".[windows]"
 ```
 
 **Run:**
 ```bash
-vigil           # launch the dashboard
-vigil --log     # launch + write JSONL tick log to vigil_YYYYMMDD_HHMMSS.jsonl
-vigil --help    # show all options
+vigil           # launch dashboard
+vigil --log     # launch + write JSONL tick log
+vigil --help    # all options
 ```
 
 ---
@@ -117,7 +119,7 @@ vigil --help    # show all options
 |-----|--------|
 | `*` / `?` | Toggle help overlay |
 | `q` / Ctrl+C | Quit |
-| `p` | Pause / resume live sampling |
+| `p` | Pause / resume sampling |
 | `r` | Reset chart history |
 | `+` / `-` | Zoom Y-axis in / out |
 | `b` | Snapshot baseline — press again to clear |
@@ -129,65 +131,26 @@ vigil --help    # show all options
 
 ## Configuration
 
-On first launch, vigil creates `~/.config/vigil/config.toml`:
+First launch creates `~/.config/vigil/config.toml`:
 
 ```toml
 [hardware]
-cpu_tdp_watts       = 65.0     # CPU TDP ceiling used for estimation
+cpu_tdp_watts       = 65.0     # CPU TDP ceiling for estimation
 gpu_tdp_watts       = 165.0    # GPU TDP ceiling
 update_interval     = 1.0      # seconds between ticks
-history_len         = 120      # chart ring-buffer depth (samples)
+history_len         = 120      # chart ring-buffer depth
 
 [cost]
 kwh_price           = 2.0      # electricity price per kWh
-currency_symbol     = "₺"      # shown in cost display
+currency_symbol     = "₺"
 
 [alerts]
-webhook_url         = ""       # HTTP POST endpoint — leave empty to disable
-cpu_temp_thresh     = 90       # °C — triggers webhook alert
-cpu_watt_thresh_pct = 90       # % of TDP — triggers webhook alert
+webhook_url         = ""       # HTTP POST endpoint — empty = disabled
+cpu_temp_thresh     = 90       # °C
+cpu_watt_thresh_pct = 90       # % of TDP
 
 [ui]
 theme               = "tactical"   # "tactical" or "ghost"
-```
-
-Edit it with any text editor. Changes take effect on the next launch.
-
----
-
-## Project Structure
-
-```
-vigil-tui/
-├── src/vigil/
-│   ├── app.py                   # Textual app, layout engine, tick loop
-│   ├── config.py                # Static constants (TDP defaults, etc.)
-│   ├── config_manager.py        # TOML config loader / writer
-│   ├── session.py               # Cost tracking, webhook alerts, JSONL logging
-│   ├── collectors/
-│   │   ├── base.py              # Collector ABC + SensorReading dataclass
-│   │   ├── cpu.py               # CPU power: hwmon → RAPL → LHM → estimate
-│   │   ├── gpu.py               # NVIDIA NVML — full metric suite
-│   │   ├── ram.py               # RAM wattage model
-│   │   ├── netdisk.py           # Network + disk I/O delta rates
-│   │   └── system.py            # Orchestrator → SystemSnapshot
-│   └── widgets/
-│       ├── power_header.py      # Top bar: wordmark + live gauge
-│       ├── cpu_panel.py         # Left: CPU package + per-core bars
-│       ├── braille_chart.py     # Center top: Braille power history
-│       ├── clock_chart.py       # Center mid: clock history chart
-│       ├── process_table.py     # Center bot: process wattage ranking
-│       ├── gpu_panel.py         # Right: GPU metrics panel
-│       ├── financial_widget.py  # Cost display
-│       ├── netdisk_widget.py    # Network + disk rates
-│       ├── status_bar.py        # Footer status line
-│       ├── boot_screen.py       # Splash / boot animation
-│       ├── help_overlay.py      # Key binding overlay
-│       └── setup_wizard.py      # First-run config wizard
-├── .github/workflows/ci.yml     # CI: import + entry-point check (Linux + Windows)
-├── pyproject.toml
-├── requirements.txt
-└── LICENSE
 ```
 
 ---
@@ -198,28 +161,66 @@ vigil-tui/
 vigil starts
 │
 ├─ Linux?
-│   ├─ hwmon sysfs (k10temp / zenpower / amd_energy)  ← real sensor, best accuracy
-│   ├─ RAPL powercap energy_uj delta                  ← kernel counter, good accuracy
-│   └─ CPU% × TDP estimate                            ← always available, rough
+│   ├─ hwmon sysfs (k10temp / zenpower / amd_energy)   ← real sensor
+│   ├─ RAPL powercap energy_uj delta                   ← kernel counter
+│   └─ CPU% × TDP estimate                             ← always available
 │
 └─ Windows?
-    ├─ LibreHardwareMonitor WMI (Admin required)      ← real sensor, best accuracy
-    └─ CPU% × TDP estimate                            ← always available, rough
-```
+    ├─ LibreHardwareMonitor WMI (requires Admin + LHM) ← real sensor
+    └─ CPU% × TDP estimate                             ← always available
 
-GPU always reads via **NVML** (pynvml). If no NVIDIA GPU is present the panel shows `unavailable` without crashing.
+GPU → NVML (pynvml) on all platforms
+     if no NVIDIA GPU: panel shows "unavailable", no crash
+```
 
 ---
 
-## Requirements
+## Project Structure
+
+```
+vigil-tui/
+├── src/vigil/
+│   ├── app.py                   # Textual app, layout, tick loop
+│   ├── config.py                # Static constants
+│   ├── config_manager.py        # TOML config loader/writer
+│   ├── session.py               # Cost tracking, webhooks, JSONL logging
+│   ├── collectors/
+│   │   ├── base.py              # Collector ABC + SensorReading
+│   │   ├── cpu.py               # hwmon → RAPL → LHM → estimate
+│   │   ├── gpu.py               # NVIDIA NVML
+│   │   ├── ram.py               # RAM wattage model
+│   │   ├── netdisk.py           # Network + disk I/O rates
+│   │   └── system.py            # Orchestrator → SystemSnapshot
+│   └── widgets/
+│       ├── power_header.py      # Top bar: wordmark + gauge
+│       ├── cpu_panel.py         # Left: CPU + per-core bars
+│       ├── braille_chart.py     # Center: power history
+│       ├── clock_chart.py       # Center: clock history
+│       ├── process_table.py     # Center: process ranking
+│       ├── gpu_panel.py         # Right: GPU metrics
+│       ├── financial_widget.py  # Cost display
+│       ├── netdisk_widget.py    # Network + disk rates
+│       ├── status_bar.py        # Footer
+│       ├── boot_screen.py       # Splash screen
+│       ├── help_overlay.py      # Key bindings overlay
+│       └── setup_wizard.py      # First-run wizard
+├── .github/workflows/ci.yml
+├── pyproject.toml
+├── requirements.txt
+└── LICENSE
+```
+
+---
+
+## Dependencies
 
 | Package | Purpose |
 |---------|---------|
 | `textual >= 0.80` | TUI framework |
-| `psutil >= 5.9.8` | CPU%, process list, network / disk I/O |
+| `psutil >= 5.9.8` | CPU%, process list, net/disk I/O |
 | `pynvml >= 11.5.0` | NVIDIA GPU metrics |
-| `wmi >= 1.5.1` *(Windows only)* | LibreHardwareMonitor WMI bridge |
-| `pywin32 >= 306` *(Windows only)* | Windows COM / WMI support |
+| `wmi >= 1.5.1` *(Windows)* | LHM WMI bridge |
+| `pywin32 >= 306` *(Windows)* | Windows COM/WMI support |
 
 ---
 
