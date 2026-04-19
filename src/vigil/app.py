@@ -29,6 +29,7 @@ Key bindings:
 
 from __future__ import annotations
 
+import sys
 import time
 from pathlib import Path
 
@@ -47,48 +48,63 @@ from vigil.session import (
     cpu_throttle_ratio,
     gpu_throttle_ratio,
 )
-from vigil.widgets.boot_screen import BootScreen
 from vigil.widgets.braille_chart import BrailleChart
+from vigil.widgets.clock_chart import ClockChartPanel
 from vigil.widgets.cpu_panel import CPUPanel
 from vigil.widgets.financial_widget import FinancialWidget
 from vigil.widgets.gpu_panel import GPUPanel
+from vigil.widgets.help_overlay import HelpOverlay
 from vigil.widgets.netdisk_widget import NetDiskWidget
 from vigil.widgets.power_header import PowerHeader
 from vigil.widgets.process_table import ProcessTable
 from vigil.widgets.status_bar import StatusBar
 
-_CSS_PATH = Path(__file__).parent / "TacticalCyberpunk.tcss"
+def _get_css_path() -> Path:
+    """Resolve CSS path for both normal and PyInstaller-frozen execution."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "TacticalCyberpunk.tcss"
+    return Path(__file__).parent / "TacticalCyberpunk.tcss"
+
+
+_CSS_PATH = _get_css_path()
 
 
 # ── Combined power history panel ───────────────────────────────────────────
 
 class CombinedChartPanel(Widget):
-    """Center-column hero widget: CPU+GPU power history on a shared canvas."""
+    """Center-column hero widget: CPU+GPU power history + session stats."""
 
     BORDER_TITLE = "POWER HISTORY"
 
     DEFAULT_CSS = """
     CombinedChartPanel {
-        border: double #1a3040;
-        border-title-color: #2a5060;
+        border: double #0e2030;
+        border-title-color: #1a4050;
         border-title-style: bold;
         height: 1fr;
-        min-height: 12;
-        background: #090d12;
+        min-height: 10;
+        background: #060a0e;
     }
     CombinedChartPanel > Label {
         height: 1;
-        background: #060810;
+        background: #050810;
         padding: 0 1;
     }
     """
 
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)  # type: ignore[arg-type]
+        self._peak_total: float = 0.0
+        self._sample_count: int = 0
+        self._sum_total: float = 0.0
+
     def compose(self) -> ComposeResult:
         yield Label("", id="chart_legend")
+        yield Label("", id="chart_stats")
         yield BrailleChart(
             y_max=config.CHART_COMBINED_Y_MAX,
             history_len=config.HISTORY_LEN,
-            series_colors=["#00ccaa", "#cc8800"],
+            series_colors=["#00ffcc", "#ffaa00"],
             id="combined_braille",
         )
 
@@ -102,10 +118,22 @@ class CombinedChartPanel(Widget):
         chart = self.query_one("#combined_braille", BrailleChart)
         chart.push(0, cpu_watts)
         chart.push(1, gpu_watts)
+
+        total = cpu_watts + gpu_watts
+        self._peak_total = max(self._peak_total, total)
+        self._sum_total += total
+        self._sample_count += 1
+
         self._update_legend(cpu_watts, cpu_src, gpu_watts, gpu_src, chart.y_max)
+        self._update_stats(total)
 
     def chart(self) -> BrailleChart:
         return self.query_one("#combined_braille", BrailleChart)
+
+    def reset(self) -> None:
+        self._peak_total = 0.0
+        self._sample_count = 0
+        self._sum_total = 0.0
 
     def _update_legend(
         self,
@@ -117,21 +145,38 @@ class CombinedChartPanel(Widget):
     ) -> None:
         t = Text(no_wrap=True, overflow="ellipsis")
 
-        t.append("  ", style="")
-        t.append("■ ", style="#00ccaa")
-        t.append("CPU ", style="#2a3a4a")
-        t.append(f"{cpu_w:5.1f}W", style="bold #00ccaa")
-        t.append(f" [{cpu_src}]", style="#1a2838")
+        t.append("  ")
+        t.append("■ ", style="#00ffcc")
+        t.append("CPU ", style="#1a3028")
+        t.append(f"{cpu_w:5.1f}W", style="bold #00ffcc")
+        t.append(f" [{cpu_src}]", style="#0e1e18")
 
-        t.append("   ", style="")
-        t.append("■ ", style="#cc8800")
-        t.append("GPU ", style="#2a3a4a")
-        t.append(f"{gpu_w:5.1f}W", style="bold #cc8800")
-        t.append(f" [{gpu_src}]", style="#1a2838")
+        t.append("   ")
+        t.append("■ ", style="#ffaa00")
+        t.append("GPU ", style="#2a2010")
+        t.append(f"{gpu_w:5.1f}W", style="bold #ffaa00")
+        t.append(f" [{gpu_src}]", style="#1a1408")
 
-        t.append(f"   ↕ {y_max:.0f}W", style="#1a2838")
+        t.append(f"   ↕ {y_max:.0f}W", style="#0e1a28")
 
         self.query_one("#chart_legend", Label).update(t)
+
+    def _update_stats(self, current_total: float) -> None:
+        avg = self._sum_total / max(self._sample_count, 1)
+        t = Text(no_wrap=True, overflow="ellipsis")
+
+        t.append("  now ", style="#0e1a28")
+        t.append(f"{current_total:5.1f}W", style="#c0d0e0")
+
+        t.append("   peak ", style="#0e1a28")
+        t.append(f"{self._peak_total:5.1f}W", style="#ff6644")
+
+        t.append("   avg ", style="#0e1a28")
+        t.append(f"{avg:5.1f}W", style="#44aaff")
+
+        t.append(f"   samples {self._sample_count}", style="#0a1420")
+
+        self.query_one("#chart_stats", Label).update(t)
 
 
 # ── RAM bar (bottom of right column) ──────────────────────────────────────
@@ -176,6 +221,7 @@ class TerminalInfoApp(App[None]):
 
     BINDINGS = [
         Binding("q", "quit", "Quit", priority=True),
+        Binding("asterisk", "help", "Help"),
         Binding("p", "toggle_pause", "Pause"),
         Binding("r", "reset_charts", "Reset"),
         Binding("+", "zoom_in", "Zoom +"),
@@ -201,6 +247,7 @@ class TerminalInfoApp(App[None]):
 
             with Vertical(id="center-col"):
                 yield CombinedChartPanel(id="chart_panel")
+                yield ClockChartPanel(id="clock_panel")
                 yield ProcessTable(id="proc_table")
 
             with Vertical(id="right-col"):
@@ -208,7 +255,7 @@ class TerminalInfoApp(App[None]):
                 yield RAMBar(id="ram_bar")
                 yield NetDiskWidget(id="netdisk_bar")
 
-        yield FinancialWidget(id="financial_bar")
+        yield FinancialWidget(currency=self._app_cfg.currency, id="financial_bar")
         yield StatusBar(id="status")
 
     # ── Lifecycle ──────────────────────────────────────────────────────────
@@ -228,7 +275,6 @@ class TerminalInfoApp(App[None]):
         if self._ghost_white:
             self.screen.add_class("ghost-white")
 
-        self.push_screen(BootScreen())
         self.set_interval(cfg.update_interval, self._tick)
 
     # ── Tick handler ───────────────────────────────────────────────────────
@@ -251,15 +297,17 @@ class TerminalInfoApp(App[None]):
         import asyncio
         asyncio.create_task(self._session.check_and_alert(snap))
 
-        # Throttle detection
+        # Throttle detection — only flag under real load (not idle clock-down)
         cpu_throttled = (
             snap.cpu.max_mhz > 0
             and bool(snap.cpu.core_mhz)
+            and snap.cpu.total_pct > 10.0
             and cpu_throttle_ratio(snap.cpu) < 0.80
         )
         gpu_throttled = (
             snap.gpu.max_core_mhz > 0
             and snap.gpu.core_mhz > 0
+            and snap.gpu.util_pct > 5
             and gpu_throttle_ratio(snap.gpu) < 0.80
         )
 
@@ -282,6 +330,18 @@ class TerminalInfoApp(App[None]):
         self.query_one("#chart_panel", CombinedChartPanel).push(
             snap.cpu.watts, snap.cpu.source,
             snap.gpu.watts, snap.gpu.source,
+        )
+
+        # Clock chart (center, middle)
+        cpu_avg_mhz = (
+            sum(snap.cpu.core_mhz) / len(snap.cpu.core_mhz)
+            if snap.cpu.core_mhz else 0.0
+        )
+        self.query_one("#clock_panel", ClockChartPanel).push(
+            cpu_avg_mhz=cpu_avg_mhz,
+            cpu_max_mhz=snap.cpu.max_mhz,
+            gpu_mhz=float(snap.gpu.core_mhz),
+            gpu_max_mhz=float(snap.gpu.max_core_mhz),
         )
 
         # Process table (center, bottom)
@@ -330,6 +390,9 @@ class TerminalInfoApp(App[None]):
 
     # ── Key actions ────────────────────────────────────────────────────────
 
+    def action_help(self) -> None:
+        self.push_screen(HelpOverlay())
+
     def action_toggle_pause(self) -> None:
         self._paused = not self._paused
         hdr = self.query_one("#header", PowerHeader)
@@ -340,6 +403,7 @@ class TerminalInfoApp(App[None]):
     def action_reset_charts(self) -> None:
         for chart in self.query(BrailleChart):
             chart.reset()
+        self.query_one("#chart_panel", CombinedChartPanel).reset()
 
     def action_zoom_in(self) -> None:
         self._y_max = max(10.0, self._y_max * 0.75)

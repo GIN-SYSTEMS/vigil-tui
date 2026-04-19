@@ -23,8 +23,9 @@ update_interval = 1.0
 history_len     = 120
 
 [cost]
-# Electricity price per kWh in your local currency.
-kwh_price = 4.5
+# US national average electricity price (EIA, 2024): ~$0.17/kWh
+kwh_price = 0.17
+currency  = "$"
 
 [alerts]
 # Set to "" to disable webhook alerts.
@@ -43,7 +44,8 @@ class AppConfig:
     gpu_tdp_watts: float = 165.0
     update_interval: float = 1.0
     history_len: int = 120
-    kwh_price: float = 4.5
+    kwh_price: float = 0.17
+    currency: str = "$"
     webhook_url: str = ""
     cpu_temp_thresh: float = 90.0
     cpu_watt_thresh_pct: float = 95.0
@@ -72,7 +74,8 @@ def load_config() -> AppConfig:
         gpu_tdp_watts=float(power.get("gpu_tdp_watts", 165.0)),
         update_interval=float(samp.get("update_interval", 1.0)),
         history_len=int(samp.get("history_len", 120)),
-        kwh_price=float(cost.get("kwh_price", 4.5)),
+        kwh_price=float(cost.get("kwh_price", 0.17)),
+        currency=str(cost.get("currency", "$")),
         webhook_url=str(alerts.get("webhook_url", "")),
         cpu_temp_thresh=float(alerts.get("cpu_temp_thresh", 90.0)),
         cpu_watt_thresh_pct=float(alerts.get("cpu_watt_thresh_pct", 95.0)),

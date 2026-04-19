@@ -40,13 +40,15 @@ def calc_gpu_efficiency(snap: GPUSnapshot, tdp: float) -> float:
 
 def efficiency_label(score: float) -> tuple[str, str]:
     """Return (label, color) for an efficiency score."""
+    if score <= 0.0:
+        return "IDLE",     "#1a3028"   # util=0 → not throttle, just idle
     if score >= 0.90:
-        return "OPTIMAL", "#00ccaa"
+        return "OPTIMAL",  "#00ffcc"
     if score >= 0.70:
-        return "NORMAL", "#6a7a8a"
+        return "NORMAL",   "#6a8a7a"
     if score >= 0.45:
-        return "LOW EFF", "#cc8800"
-    return "THROTTLE", "#cc4400"
+        return "LOW EFF",  "#ffaa00"
+    return "THROTTLE",     "#ff3300"
 
 
 # ── Throttle detection ────────────────────────────────────────────────────

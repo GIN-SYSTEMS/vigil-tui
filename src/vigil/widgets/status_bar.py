@@ -1,6 +1,10 @@
-"""StatusBar widget — single-line system identity footer.
+"""StatusBar widget — two-line footer.
 
-V3.0: blinking ⚠ THERMAL THROTTLE badge when CPU or GPU is throttling.
+Row 1 (identity + sensors):
+  OS  ·  arch  ·  uptime  ·  cpu:src  gpu:src  ·  TRUST BADGE  ·  ⏱ ms
+
+Row 2 (keybinding strip):
+  [*] help  [c] config  [q] quit  [p] pause  [r] reset  [b] baseline  [t] theme  [+/-] zoom  [s] shot
 """
 
 from __future__ import annotations
@@ -9,12 +13,32 @@ import platform
 import time
 
 from rich.text import Text
+from textual.app import ComposeResult
 from textual.widget import Widget
+from textual.widgets import Label
 
 _UNAME = platform.uname()
 _SESSION_START = time.monotonic()
+_IS_WINDOWS = platform.system() == "Windows"
 
 _SEP = Text("  ·  ", style="#0e1a22")
+
+# Sources we trust as direct hardware reads (vs. CPU% × TDP guesses).
+_REAL_SOURCES: frozenset[str] = frozenset({
+    "hwmon", "rapl", "wmi", "nvml",
+})
+
+_KEY_HINTS = (
+    "[*] help",
+    "[c] config",
+    "[q] quit",
+    "[p] pause",
+    "[r] reset",
+    "[b] baseline",
+    "[t] theme",
+    "[+/-] zoom",
+    "[s] shot",
+)
 
 
 def _uptime() -> str:
@@ -24,16 +48,38 @@ def _uptime() -> str:
     return f"{h}h {m:02d}m {sec:02d}s"
 
 
+def _trust_label(cpu_src: str, gpu_src: str) -> tuple[str, str, bool]:
+    """Return (icon_text, color, lhm_hint_needed) for the trust badge."""
+    cpu_real = cpu_src in _REAL_SOURCES
+    gpu_real = gpu_src in _REAL_SOURCES
+
+    if cpu_real and gpu_real:
+        return "● REAL", "#00cc88", False
+    if not cpu_real and not gpu_real:
+        return "◌ EST", "#cc4400", _IS_WINDOWS and cpu_src == "estimate"
+    return "◐ MIXED", "#ffaa00", _IS_WINDOWS and cpu_src == "estimate"
+
+
 class StatusBar(Widget):
-    """Single-line footer: OS identity, sensor sources, sample latency."""
+    """Two-line footer: OS identity + trust badge (row 1) · key hints (row 2)."""
 
     DEFAULT_CSS = """
     StatusBar {
-        height: 1;
+        height: 2;
         background: #030507;
         color: #1e2e3a;
         padding: 0 1;
         dock: bottom;
+    }
+    StatusBar > #status-identity {
+        height: 1;
+        background: #030507;
+        color: #1e2e3a;
+    }
+    StatusBar > #status-keys {
+        height: 1;
+        background: #020406;
+        color: #0e1a22;
     }
     """
 
@@ -46,6 +92,10 @@ class StatusBar(Widget):
         self._gpu_throttled: bool = False
         self._baseline_active: bool = False
         self._blink_state: bool = False
+
+    def compose(self) -> ComposeResult:
+        yield Label("", id="status-identity")
+        yield Label("", id="status-keys")
 
     def update_display(
         self,
@@ -63,16 +113,21 @@ class StatusBar(Widget):
         self._gpu_throttled = gpu_throttled
         self._baseline_active = baseline_active
         self._blink_state = not self._blink_state
-        self.refresh()
+        self._refresh_rows()
 
-    def render(self) -> Text:
+    def _refresh_rows(self) -> None:
+        try:
+            self.query_one("#status-identity", Label).update(self._render_identity())
+            self.query_one("#status-keys", Label).update(self._render_keys())
+        except Exception:
+            pass
+
+    def _render_identity(self) -> Text:
         t = Text(no_wrap=True, overflow="ellipsis")
 
         t.append(f"{_UNAME.system} {_UNAME.release[:16]}", style="#223038")
         t.append_text(_SEP)
         t.append(_UNAME.machine, style="#182430")
-        t.append_text(_SEP)
-        t.append(_UNAME.node[:24], style="#182430")
         t.append_text(_SEP)
         t.append("up ", style="#0e1820")
         t.append(_uptime(), style="#203038")
@@ -81,6 +136,14 @@ class StatusBar(Widget):
         t.append(self._cpu_src, style="#1e4830")
         t.append("  gpu:", style="#0e1820")
         t.append(self._gpu_src, style="#1e3048")
+        t.append_text(_SEP)
+
+        # Trust badge
+        icon, color, lhm_hint = _trust_label(self._cpu_src, self._gpu_src)
+        t.append(icon, style=f"bold {color}")
+        if lhm_hint:
+            t.append("  ⚠ LHM ADMIN", style="bold #ffaa00")
+
         t.append_text(_SEP)
         t.append(f"⏱ {self._sample_ms:.0f} ms", style="#142028")
 
@@ -95,4 +158,20 @@ class StatusBar(Widget):
             t.append_text(_SEP)
             t.append("◉ BASELINE ACTIVE", style="#00cc88")
 
+        return t
+
+    def _render_keys(self) -> Text:
+        t = Text(no_wrap=True, overflow="ellipsis")
+        t.append("  ", style="")
+        for i, hint in enumerate(_KEY_HINTS):
+            if i > 0:
+                t.append("  ", style="")
+            parts = hint.split("]", 1)
+            if len(parts) == 2:
+                t.append("[", style="#0e1828")
+                t.append(parts[0][1:], style="#1e4060")
+                t.append("]", style="#0e1828")
+                t.append(parts[1], style="#0e1828")
+            else:
+                t.append(hint, style="#0e1828")
         return t

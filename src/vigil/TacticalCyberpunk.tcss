@@ -40,7 +40,7 @@ Screen {
 }
 
 #left-col {
-    width: 32;
+    width: 42;
     border-right: solid #0a1520;
 }
 
@@ -60,9 +60,27 @@ CombinedChartPanel {
     border: double #0e2030;
     border-title-color: #1a4050;
     border-title-style: bold;
-    height: 1fr;
-    min-height: 12;
+    height: 3fr;
+    min-height: 8;
     background: #060a0e;
+}
+
+/* ── Clock chart panel (center middle) ───────────────────────────────── */
+
+ClockChartPanel {
+    border: double #112030;
+    border-title-color: #1a3848;
+    border-title-style: bold;
+    height: 2fr;
+    min-height: 6;
+    background: #060a0e;
+}
+
+ClockChartPanel > Label {
+    height: 1;
+    background: #050810;
+    color: #1a2838;
+    padding: 0 1;
 }
 
 CombinedChartPanel > Label {
@@ -158,8 +176,20 @@ RAMBar {
 
 StatusBar {
     background: #030507;
-    height: 1;
+    height: 2;
     color: #1e2e3a;
+}
+
+StatusBar > #status-identity {
+    height: 1;
+    background: #030507;
+    color: #1e2e3a;
+}
+
+StatusBar > #status-keys {
+    height: 1;
+    background: #020406;
+    color: #0e1a22;
 }
 
 /* ── Scrollbars ───────────────────────────────────────────────────────── */
@@ -270,6 +300,27 @@ Screen.ghost-white NetDiskWidget {
 Screen.ghost-white StatusBar {
     background: #d0d4e0;
     color: #3a3a50;
+}
+
+Screen.ghost-white StatusBar > #status-identity {
+    background: #d0d4e0;
+    color: #2a2a40;
+}
+
+Screen.ghost-white StatusBar > #status-keys {
+    background: #c8ccda;
+    color: #6a6a80;
+}
+
+Screen.ghost-white ClockChartPanel {
+    border: double #6080a0;
+    border-title-color: #3060a0;
+    background: #f4f6fc;
+}
+
+Screen.ghost-white ClockChartPanel > Label {
+    background: #e8eaf0;
+    color: #3a4050;
 }
 
 Screen.ghost-white CombinedChartPanel > Label {
