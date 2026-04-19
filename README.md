@@ -1,66 +1,112 @@
-# vigil
-
-> Real-time terminal power monitor — CPU · GPU · RAM · Network · Process load
-
-A high-resolution TUI dashboard that shows live wattage, thermals, efficiency scores, and electricity cost for your system — all inside the terminal.
+<div align="center">
 
 ```
-▓░ VIGIL ░▓   ████████████░░░░░░░░░░░░░░░░    18.8 W / 260 W  [cpu:estimate  gpu:nvml]
+██╗   ██╗██╗ ██████╗ ██╗██╗
+██║   ██║██║██╔════╝ ██║██║
+██║   ██║██║██║  ███╗██║██║
+╚██╗ ██╔╝██║██║   ██║██║██║
+ ╚████╔╝ ██║╚██████╔╝██║███████╗
+  ╚═══╝  ╚═╝ ╚═════╝ ╚═╝╚══════╝
 ```
+
+**Real-time terminal power monitor — CPU · GPU · RAM · Network · Processes**
+
+[![CI](https://github.com/GIN-SYSTEMS/vigil-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/GIN-SYSTEMS/vigil-tui/actions)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)](https://github.com/GIN-SYSTEMS/vigil-tui)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+</div>
+
+---
+
+![vigil-tui dashboard](assets/screenshot.png)
+
+---
+
+## What is vigil?
+
+vigil is a high-resolution terminal dashboard that shows **live wattage, thermals, clock speeds, efficiency scores, and electricity cost** for every major component in your system — all inside the terminal with no browser, no background service, no telemetry.
+
+It reads directly from hardware sensors (hwmon, RAPL, LibreHardwareMonitor, NVML) and falls back gracefully when sensors are unavailable. Every panel updates in real time, every metric is timestamped, and the whole thing runs from a single `vigil` command.
 
 ---
 
 ## Features
 
-- **CPU power** — hwmon (AMD/Intel) · RAPL · LibreHardwareMonitor · estimate fallback
-- **GPU power** — NVIDIA via NVML; temperature, VRAM, clocks, fan
-- **RAM wattage** — DDR4 power model (slot count × utilisation)
-- **Per-core bars** — utilisation + frequency with boost detection
-- **Power history chart** — high-resolution Braille overlay (CPU + GPU)
-- **Process ranking** — top processes by estimated wattage with sparklines
-- **Electricity cost** — ₺/hr, ₺/day, session total (configurable currency)
-- **Throttle detection** — visual blinking alert when CPU or GPU is throttled
-- **Efficiency score** — perf/watt rating: OPTIMAL · NORMAL · LOW EFF · THROTTLE
-- **Baseline mode** — snapshot idle state, compare deltas in real time
-- **Webhook alerts** — HTTP POST on CPU temp or power threshold breach
-- **Session logging** — optional JSONL tick log (`--log` flag)
-- **Two themes** — TacticalCyberpunk (dark) · GhostWhite (light)
+### Power & Thermals
+- **CPU package power** — hwmon (AMD k10temp / zenpower / amd_energy) → RAPL powercap → LibreHardwareMonitor WMI → CPU% × TDP estimate fallback
+- **GPU power** — NVIDIA via NVML: watts, die temperature, utilisation %, core / memory clocks, VRAM, fan speed
+- **RAM wattage** — DDR4 power model based on slot count and utilisation
+- **Throttle detection** — blinking `THROTTLE` badge when CPU or GPU thermal throttling is detected
+
+### Charts & Visualisation
+- **Braille power history chart** — high-resolution CPU + GPU wattage overlay using Unicode Braille characters
+- **Clock history chart** — CPU average frequency and GPU core clock over time with boost ceiling marker
+- **Per-core CPU bars** — utilisation percentage + live frequency for every core with boost detection
+
+### Process Intelligence
+- **Process table** — top processes ranked by estimated wattage contribution
+- **Sparkline trends** — mini bar chart showing per-process watt history
+- **EST.W column** — estimated watts per process derived from CPU% share of package power
+
+### Efficiency & Cost
+- **Efficiency score** — performance-per-watt rating: `OPTIMAL` · `NORMAL` · `LOW EFF` · `THROTTLE`
+- **Electricity cost** — ₺/hr, ₺/day, session total with configurable kWh price and currency symbol
+- **Baseline mode** — snapshot idle state, then compare live delta against it in real time
+
+### Alerts & Logging
+- **Webhook alerts** — HTTP POST to any endpoint when CPU temperature or power threshold is breached
+- **Session logging** — optional JSONL tick log (`--log` flag) for offline analysis
+- **SVG screenshot** — capture the full dashboard as a vector image with `s`
+
+### Themes & UX
+- **TacticalCyberpunk** (dark) — green / amber / cyan on near-black
+- **GhostWhite** (light) — high-contrast monochrome
+- **Setup wizard** — first-run guided configuration for TDP and kWh price
+- **Accent color tweaks** — live recolour via sidebar
 
 ---
 
 ## Platform Support
 
-| Platform | CPU Power | GPU Power | Temperature |
-|----------|-----------|-----------|-------------|
-| **Linux** | hwmon · RAPL · estimate | NVML | hwmon |
-| **Windows 11/10** | LibreHardwareMonitor · estimate | NVML | LHM |
-| **macOS** | estimate only | estimate only | — |
+| Platform | CPU Power | CPU Temp | GPU Power | GPU Temp |
+|---|---|---|---|---|
+| **Linux** | hwmon · RAPL · estimate | hwmon | NVML | NVML |
+| **Windows 11 / 10** | LibreHardwareMonitor · estimate | LHM | NVML | NVML |
+| **macOS** | estimate only | — | NVML (if present) | NVML |
 
-### Windows Note
-For accurate CPU readings on Windows, run [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) as Administrator before launching vigil. Without it, vigil falls back to CPU% × TDP estimation.
+### Windows — accurate CPU readings
+
+On Windows, vigil reads real CPU wattage through **LibreHardwareMonitor** WMI. Without it, vigil falls back to a CPU% × TDP estimate.
+
+1. Download [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases)
+2. Run it **as Administrator**
+3. Launch vigil — it will detect LHM automatically
 
 ---
 
 ## Installation
 
-**Requirements:** Python 3.11+
+**Requirements:** Python 3.11 or newer
 
 ```bash
-# Clone
-git clone https://github.com/yourusername/vigil
-cd vigil
+# Clone the repository
+git clone https://github.com/GIN-SYSTEMS/vigil-tui
+cd vigil-tui
 
-# Install (Linux / macOS)
+# Linux / macOS
 pip install .
 
-# Install (Windows — includes WMI + pywin32)
+# Windows  (includes WMI + pywin32 for LHM support)
 pip install ".[windows]"
 ```
 
 **Run:**
 ```bash
-vigil          # launch dashboard
-vigil --log    # launch + write JSONL tick log
+vigil           # launch the dashboard
+vigil --log     # launch + write JSONL tick log to vigil_YYYYMMDD_HHMMSS.jsonl
+vigil --help    # show all options
 ```
 
 ---
@@ -69,13 +115,15 @@ vigil --log    # launch + write JSONL tick log
 
 | Key | Action |
 |-----|--------|
+| `*` / `?` | Toggle help overlay |
 | `q` / Ctrl+C | Quit |
-| `p` | Pause / resume sampling |
+| `p` | Pause / resume live sampling |
 | `r` | Reset chart history |
 | `+` / `-` | Zoom Y-axis in / out |
-| `b` | Snapshot baseline (press again to clear) |
+| `b` | Snapshot baseline — press again to clear |
 | `s` | Save SVG screenshot |
 | `t` | Toggle theme (dark ↔ light) |
+| `c` | Open config / setup wizard |
 
 ---
 
@@ -84,47 +132,103 @@ vigil --log    # launch + write JSONL tick log
 On first launch, vigil creates `~/.config/vigil/config.toml`:
 
 ```toml
-cpu_tdp_watts     = 65.0       # your CPU's TDP ceiling
-gpu_tdp_watts     = 165.0      # your GPU's TDP ceiling
-update_interval   = 1.0        # seconds between ticks
-history_len       = 120        # chart ring-buffer depth
-kwh_price         = 2.0        # electricity price per kWh
-webhook_url       = ""         # optional alert endpoint
-cpu_temp_thresh   = 90         # °C alert threshold
-cpu_watt_thresh_pct = 90       # % of TDP alert threshold
-theme             = "tactical" # "tactical" or "ghost"
+[hardware]
+cpu_tdp_watts       = 65.0     # CPU TDP ceiling used for estimation
+gpu_tdp_watts       = 165.0    # GPU TDP ceiling
+update_interval     = 1.0      # seconds between ticks
+history_len         = 120      # chart ring-buffer depth (samples)
+
+[cost]
+kwh_price           = 2.0      # electricity price per kWh
+currency_symbol     = "₺"      # shown in cost display
+
+[alerts]
+webhook_url         = ""       # HTTP POST endpoint — leave empty to disable
+cpu_temp_thresh     = 90       # °C — triggers webhook alert
+cpu_watt_thresh_pct = 90       # % of TDP — triggers webhook alert
+
+[ui]
+theme               = "tactical"   # "tactical" or "ghost"
 ```
+
+Edit it with any text editor. Changes take effect on the next launch.
 
 ---
 
 ## Project Structure
 
 ```
-src/vigil/
-├── app.py               # Main Textual app, layout, tick loop
-├── config.py            # Static constants
-├── config_manager.py    # TOML config loader
-├── session.py           # Cost tracking, alerts, logging
-├── collectors/
-│   ├── cpu.py           # CPU power (hwmon → RAPL → LHM → estimate)
-│   ├── gpu.py           # NVIDIA NVML
-│   ├── ram.py           # RAM power model
-│   ├── netdisk.py       # Net + disk I/O rates
-│   └── system.py        # Orchestrator, snapshot types
-└── widgets/
-    ├── power_header.py  # Top bar: wordmark + gauge
-    ├── cpu_panel.py     # Left: CPU metrics + per-core
-    ├── braille_chart.py # Center: high-res power history
-    ├── process_table.py # Center: process ranking
-    ├── gpu_panel.py     # Right: GPU metrics
-    ├── financial_widget.py  # Cost display
-    ├── netdisk_widget.py    # Net + disk rates
-    ├── status_bar.py        # Footer
-    └── boot_screen.py       # Splash screen
+vigil-tui/
+├── src/vigil/
+│   ├── app.py                   # Textual app, layout engine, tick loop
+│   ├── config.py                # Static constants (TDP defaults, etc.)
+│   ├── config_manager.py        # TOML config loader / writer
+│   ├── session.py               # Cost tracking, webhook alerts, JSONL logging
+│   ├── collectors/
+│   │   ├── base.py              # Collector ABC + SensorReading dataclass
+│   │   ├── cpu.py               # CPU power: hwmon → RAPL → LHM → estimate
+│   │   ├── gpu.py               # NVIDIA NVML — full metric suite
+│   │   ├── ram.py               # RAM wattage model
+│   │   ├── netdisk.py           # Network + disk I/O delta rates
+│   │   └── system.py            # Orchestrator → SystemSnapshot
+│   └── widgets/
+│       ├── power_header.py      # Top bar: wordmark + live gauge
+│       ├── cpu_panel.py         # Left: CPU package + per-core bars
+│       ├── braille_chart.py     # Center top: Braille power history
+│       ├── clock_chart.py       # Center mid: clock history chart
+│       ├── process_table.py     # Center bot: process wattage ranking
+│       ├── gpu_panel.py         # Right: GPU metrics panel
+│       ├── financial_widget.py  # Cost display
+│       ├── netdisk_widget.py    # Network + disk rates
+│       ├── status_bar.py        # Footer status line
+│       ├── boot_screen.py       # Splash / boot animation
+│       ├── help_overlay.py      # Key binding overlay
+│       └── setup_wizard.py      # First-run config wizard
+├── .github/workflows/ci.yml     # CI: import + entry-point check (Linux + Windows)
+├── pyproject.toml
+├── requirements.txt
+└── LICENSE
 ```
+
+---
+
+## How the power waterfall works
+
+```
+vigil starts
+│
+├─ Linux?
+│   ├─ hwmon sysfs (k10temp / zenpower / amd_energy)  ← real sensor, best accuracy
+│   ├─ RAPL powercap energy_uj delta                  ← kernel counter, good accuracy
+│   └─ CPU% × TDP estimate                            ← always available, rough
+│
+└─ Windows?
+    ├─ LibreHardwareMonitor WMI (Admin required)      ← real sensor, best accuracy
+    └─ CPU% × TDP estimate                            ← always available, rough
+```
+
+GPU always reads via **NVML** (pynvml). If no NVIDIA GPU is present the panel shows `unavailable` without crashing.
+
+---
+
+## Requirements
+
+| Package | Purpose |
+|---------|---------|
+| `textual >= 0.80` | TUI framework |
+| `psutil >= 5.9.8` | CPU%, process list, network / disk I/O |
+| `pynvml >= 11.5.0` | NVIDIA GPU metrics |
+| `wmi >= 1.5.1` *(Windows only)* | LibreHardwareMonitor WMI bridge |
+| `pywin32 >= 306` *(Windows only)* | Windows COM / WMI support |
 
 ---
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — free to use, modify, and distribute.
+
+---
+
+<div align="center">
+built by <a href="https://github.com/GIN-SYSTEMS">GIN-SYSTEMS</a>
+</div>
