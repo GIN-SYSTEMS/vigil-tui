@@ -1,12 +1,6 @@
 <div align="center">
 
-```
-##   ##  ####   ####   ####  ##     
-##   ##   ##   ##     ##  ## ##     
-##   ##   ##   ## ###  ##    ##     
- ## ##    ##   ##  ##  ##  ## ##    
-  ###    ####   ####    ####  #####
-```
+# VIGIL
 
 **Real-time terminal power monitor — CPU · GPU · RAM · Network · Processes**
 
