@@ -1,0 +1,278 @@
+/*
+ * TacticalCyberpunk.tcss — vigil v1.0
+ *
+ * Design philosophy: precision military dashboard.
+ * Each subsystem has its own colour identity.
+ *
+ * Palette:
+ *   void         #030507   — deepest background
+ *   panel        #080c10   — widget fill
+ *   surface      #060810   — sub-panels, legend bars
+ *   sep          #0a1520   — column dividers
+ *
+ *   cpu-accent   #00ffcc   — CPU teal (bright)
+ *   cpu-border   #004433   — CPU panel border
+ *   gpu-accent   #ffaa00   — GPU gold
+ *   gpu-border   #443300   — GPU panel border
+ *   ram-accent   #aa77ff   — RAM violet
+ *   net-up       #44aaff   — network upload sky-blue
+ *   net-dn       #ff6644   — network download coral
+ *   disk-r       #5588cc   — disk read blue
+ *   disk-w       #ff9944   — disk write orange
+ *
+ *   ok           #00cc88   — low load, good state
+ *   warn         #ffaa00   — elevated / warning
+ *   crit         #ff3300   — danger / overload
+ */
+
+/* ── Root ─────────────────────────────────────────────────────────────── */
+
+Screen {
+    background: #030507;
+    color: #4a6070;
+    layers: base overlay;
+}
+
+/* ── Main layout ──────────────────────────────────────────────────────── */
+
+#main {
+    height: 1fr;
+}
+
+#left-col {
+    width: 32;
+    border-right: solid #0a1520;
+}
+
+#center-col {
+    width: 1fr;
+    min-width: 42;
+}
+
+#right-col {
+    width: 36;
+    border-left: solid #0a1520;
+}
+
+/* ── Chart panel (center top) ─────────────────────────────────────────── */
+
+CombinedChartPanel {
+    border: double #0e2030;
+    border-title-color: #1a4050;
+    border-title-style: bold;
+    height: 1fr;
+    min-height: 12;
+    background: #060a0e;
+}
+
+CombinedChartPanel > Label {
+    height: 1;
+    background: #050810;
+    color: #1a2a38;
+    padding: 0 1;
+}
+
+/* ── CPU panel (left) — teal identity ────────────────────────────────── */
+
+CPUPanel {
+    border: double #004433;
+    border-title-color: #00aa77;
+    border-title-style: bold;
+    height: 1fr;
+    background: #080c10;
+    padding: 0 1;
+}
+
+CPUPanel > Static {
+    background: #080c10;
+}
+
+/* ── GPU panel (right) — gold identity ───────────────────────────────── */
+
+GPUPanel {
+    border: double #443300;
+    border-title-color: #aa7700;
+    border-title-style: bold;
+    height: auto;
+    background: #0a0d10;
+    padding: 0 1;
+}
+
+GPUPanel > Static {
+    background: #0a0d10;
+}
+
+/* ── Process table (center bottom) ───────────────────────────────────── */
+
+ProcessTable {
+    border: double #0e2030;
+    border-title-color: #1a4050;
+    border-title-style: bold;
+    height: 12;
+    background: #060a0e;
+}
+
+/* ── DataTable ────────────────────────────────────────────────────────── */
+
+DataTable {
+    background: #060a0e;
+    color: #2a4050;
+    scrollbar-background: #0a1520;
+    scrollbar-color: #142030;
+    scrollbar-color-hover: #1e3040;
+    scrollbar-corner-color: #060a0e;
+}
+
+DataTable > .datatable--header {
+    background: #050810;
+    color: #1a3040;
+    text-style: bold;
+}
+
+DataTable > .datatable--even-row {
+    background: #060a0e;
+}
+
+DataTable > .datatable--odd-row {
+    background: #050810;
+}
+
+/* ── Braille chart ────────────────────────────────────────────────────── */
+
+BrailleChart {
+    background: #060a0e;
+    height: 1fr;
+}
+
+/* ── RAM bar ──────────────────────────────────────────────────────────── */
+
+RAMBar {
+    height: 2;
+    border-top: solid #0a1520;
+    background: #060810;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+/* ── Status bar ───────────────────────────────────────────────────────── */
+
+StatusBar {
+    background: #030507;
+    height: 1;
+    color: #1e2e3a;
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────── */
+
+ScrollBar {
+    background: #0a1520;
+    color: #142030;
+}
+
+/* ── Financial widget ─────────────────────────────────────────────────── */
+
+FinancialWidget {
+    height: 3;
+    border-top: solid #0a1520;
+    background: #050810;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+/* ── Net/disk widget ──────────────────────────────────────────────────── */
+
+NetDiskWidget {
+    height: 2;
+    border-top: solid #0a1520;
+    background: #050810;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+/* ── GhostWhite theme overrides ───────────────────────────────────────── */
+/*
+ * Toggle with 't' key. High-contrast light mode for bright environments.
+ */
+
+Screen.ghost-white {
+    background: #f0f0f2;
+    color: #1a1a2e;
+}
+
+Screen.ghost-white #main {
+    background: #e8e8ec;
+}
+
+Screen.ghost-white #left-col {
+    border-right: solid #aab0c0;
+}
+
+Screen.ghost-white #right-col {
+    border-left: solid #aab0c0;
+}
+
+Screen.ghost-white CPUPanel {
+    border: double #007755;
+    border-title-color: #005533;
+    background: #f4fbf8;
+}
+
+Screen.ghost-white GPUPanel {
+    border: double #886600;
+    border-title-color: #664400;
+    background: #faf8f0;
+}
+
+Screen.ghost-white ProcessTable,
+Screen.ghost-white CombinedChartPanel {
+    border: double #6080a0;
+    border-title-color: #3060a0;
+    background: #f4f6fc;
+}
+
+Screen.ghost-white CPUPanel > Static {
+    background: #f4fbf8;
+}
+
+Screen.ghost-white GPUPanel > Static {
+    background: #faf8f0;
+}
+
+Screen.ghost-white BrailleChart {
+    background: #f0f2f8;
+}
+
+Screen.ghost-white DataTable {
+    background: #f4f6fc;
+    color: #2a2a40;
+}
+
+Screen.ghost-white DataTable > .datatable--header {
+    background: #d8dcea;
+    color: #1a1a30;
+}
+
+Screen.ghost-white DataTable > .datatable--even-row {
+    background: #f4f6fc;
+}
+
+Screen.ghost-white DataTable > .datatable--odd-row {
+    background: #eceff8;
+}
+
+Screen.ghost-white RAMBar,
+Screen.ghost-white FinancialWidget,
+Screen.ghost-white NetDiskWidget {
+    background: #e8eaf0;
+    border-top: solid #aab0c0;
+}
+
+Screen.ghost-white StatusBar {
+    background: #d0d4e0;
+    color: #3a3a50;
+}
+
+Screen.ghost-white CombinedChartPanel > Label {
+    background: #e8eaf0;
+    color: #3a4050;
+}

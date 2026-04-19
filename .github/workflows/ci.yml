@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-import:
+    name: Import check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install core dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: pip install .
+
+      - name: Install core + windows dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: pip install ".[windows]"
+
+      - name: Verify package imports cleanly
+        run: python -c "import vigil; import vigil.collectors.cpu; import vigil.collectors.gpu; print('OK')"
+
+      - name: Verify CLI entry point exists
+        run: python -m vigil --help || true

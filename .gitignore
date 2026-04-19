@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+MANIFEST
+
+# Virtual environments
+.venv*/
+venv*/
+env*/
+ENV*/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Logs and output
+*.log
+*.jsonl
+vigil_*.svg
+terminalinfo_*.svg
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Distribution
+*.tar.gz
+*.zip
+
+# Config (user-local, may contain personal paths)
+# Note: ~/.config/vigil/config.toml is created at runtime, not tracked here

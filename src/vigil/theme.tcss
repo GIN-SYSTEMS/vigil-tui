@@ -1,0 +1,91 @@
+/*
+ * terminalinfo — dark cyber/server aesthetic
+ *
+ * Palette:
+ *   background     #070a0e   near-black blue-tinted canvas
+ *   surface        #090d12   panel fill
+ *   surface-dim    #060810   header/footer fill
+ *   border         #0d1a28   subtle panel dividers
+ *   text-base      #6a7a8a   default text
+ *   text-dim       #2a3a4a   secondary / labels
+ *   text-ghost     #151f2a   grid lines / separators
+ *   accent-cyan    #00ccaa   primary accent (CPU, gauges)
+ *   accent-amber   #cc8800   GPU / warning
+ *   accent-danger  #cc4400   over-threshold alerts
+ */
+
+Screen {
+    background: #070a0e;
+    color: #6a7a8a;
+    layers: base overlay;
+}
+
+/* ── Top-level layout ──────────────────────────────────────────────── */
+
+#main {
+    height: 1fr;
+}
+
+/* ── Chart column (left 2/3) ───────────────────────────────────────── */
+
+#charts {
+    width: 2fr;
+    border-right: solid #0d1a28;
+}
+
+/* ── Sidebar column (right 1/3) ────────────────────────────────────── */
+
+#sidebar {
+    width: 1fr;
+}
+
+/* ── Chart panel composite widget ──────────────────────────────────── */
+
+ChartPanel {
+    height: 1fr;
+    border-bottom: solid #0d1a28;
+}
+
+ChartPanel:last-of-type {
+    border-bottom: none;
+}
+
+/* ── DataTable ─────────────────────────────────────────────────────── */
+
+DataTable {
+    background: #090d12;
+    color: #4a6070;
+    scrollbar-background: #0d1a28;
+    scrollbar-color: #1a2a3a;
+    scrollbar-color-hover: #2a3a4a;
+}
+
+DataTable > .datatable--header {
+    background: #060810;
+    color: #2a3a4a;
+    text-style: bold;
+}
+
+DataTable > .datatable--even-row {
+    background: #090d12;
+}
+
+DataTable > .datatable--odd-row {
+    background: #080c10;
+}
+
+/* ── RAM bar ───────────────────────────────────────────────────────── */
+
+RAMBar {
+    height: 2;
+    border-top: solid #0d1a28;
+    background: #060810;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+/* ── Scrollbar global ──────────────────────────────────────────────── */
+
+ScrollBar {
+    background: #0d1a28;
+}
