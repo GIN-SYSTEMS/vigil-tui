@@ -1,3 +1,4 @@
+```markdown
 # Contributing to vigil-tui
 
 First off, thank you for considering contributing to `vigil-tui`! This tool is built with a minimalist, "terminal-first" philosophy. Your help makes this project better for everyone.
@@ -13,40 +14,40 @@ Enhancement suggestions are tracked as GitHub issues. Explain the feature and wh
 ## Local Development Setup
 
 1. **Fork** the repository on GitHub.
+
 2. **Clone** your fork locally:
 ```bash
-git clone [https://github.com/YOUR_USERNAME/vigil-tui.git](https://github.com/YOUR_USERNAME/vigil-tui.git)
+git clone https://github.com/YOUR_USERNAME/vigil-tui.git
 cd vigil-tui
+```
 
-
-Create a virtual environment:
-
+3. **Create a virtual environment:**
+```bash
 python3 -m venv venv
 source venv/bin/activate
+```
 
-
-Install in editable mode:
-
+4. **Install in editable mode:**
+```bash
 pip install -e .
+```
 
+## Coding Standards
 
-Coding Standards
-Textual Framework: Adhere to Textual best practices (use BINDINGS, proper state management).
+* **Textual Framework:** Adhere to `Textual` best practices (use BINDINGS, proper state management).
+* **Minimalism:** Keep the code lightweight and resource-efficient.
+* **Naming:** Use `snake_case` for variables and functions.
+* **Comments:** Add brief English comments for complex logic.
 
-Minimalism: Keep the code lightweight and resource-efficient.
+## Pull Request Process
 
-Naming: Use snake_case for variables and functions.
-
-Comments: Add brief English comments for complex logic.
-
-Pull Request Process
-Create a new branch:
-
+1. Create a new branch:
+```bash
 git checkout -b feature/your-feature-name
+```
 
-Make your changes and test them locally.
+2. Make your changes and test them locally.
 
-Push to your fork and submit a Pull Request.
+3. Push to your fork and submit a **Pull Request**.
 
 I will review your PR as soon as possible. By contributing, you agree that your contributions will be licensed under the project's MIT License. Thank you!
-
