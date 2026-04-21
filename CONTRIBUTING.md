@@ -15,7 +15,7 @@ Enhancement suggestions are tracked as GitHub issues. Explain the feature and wh
 1. **Fork** the repository on GitHub.
 2. **Clone** your fork locally:
 ```bash
-git clone https://github.com/GIN-SYSTEMS/vigil-tui.git
+git clone https://github.com/YOUR_USERNAME/vigil-tui.git
 cd vigil-tui
 
 Create a virtual environment:
