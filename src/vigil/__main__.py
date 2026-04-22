@@ -1,7 +1,8 @@
 """Entry point — run as: python -m vigil
 
 Flags:
-  --log    Append JSONL tick records to ~/.local/share/vigil/YYYY-MM-DD.jsonl
+  --log             Append JSONL tick records to ~/.local/share/vigil/YYYY-MM-DD.jsonl
+  --filter / -f S   Only show processes whose name contains S (case-insensitive).
 """
 
 from __future__ import annotations
@@ -20,10 +21,21 @@ def main() -> None:
         default=False,
         help="Log every tick to ~/.local/share/vigil/YYYY-MM-DD.jsonl",
     )
+    parser.add_argument(
+        "-f",
+        "--filter",
+        dest="process_filter",
+        default=None,
+        metavar="SUBSTRING",
+        help="Only show processes whose name contains SUBSTRING (case-insensitive).",
+    )
     args = parser.parse_args()
 
     from vigil.app import TerminalInfoApp
-    TerminalInfoApp(log_enabled=args.log).run()
+    TerminalInfoApp(
+        log_enabled=args.log,
+        process_filter=args.process_filter,
+    ).run()
 
 
 if __name__ == "__main__":
