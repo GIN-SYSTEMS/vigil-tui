@@ -231,9 +231,15 @@ class TerminalInfoApp(App[None]):
         Binding("t", "toggle_theme", "Theme"),
     ]
 
-    def __init__(self, log_enabled: bool = False, **kwargs: object) -> None:
+    def __init__(
+        self,
+        log_enabled: bool = False,
+        process_filter: str | None = None,
+        **kwargs: object,
+    ) -> None:
         super().__init__(**kwargs)  # type: ignore[arg-type]
         self._log_enabled = log_enabled
+        self._process_filter = process_filter
         self._app_cfg: AppConfig = load_config()
 
     # ── Layout ─────────────────────────────────────────────────────────────
@@ -261,7 +267,7 @@ class TerminalInfoApp(App[None]):
     # ── Lifecycle ──────────────────────────────────────────────────────────
 
     def on_mount(self) -> None:
-        self._collector = SystemCollector()
+        self._collector = SystemCollector(process_filter=self._process_filter)
         self._paused = False
         self._y_max = config.CHART_COMBINED_Y_MAX
         self._ghost_white = self._app_cfg.theme == "ghost"

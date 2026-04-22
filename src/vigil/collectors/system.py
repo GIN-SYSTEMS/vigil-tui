@@ -91,11 +91,18 @@ class SystemSnapshot:
 class SystemCollector:
     """Calls all sub-collectors and assembles a SystemSnapshot each tick."""
 
-    def __init__(self) -> None:
+    def __init__(self, process_filter: str | None = None) -> None:
         self._cpu = CPUCollector()
         self._gpu = GPUCollector()
         self._ram = RAMCollector()
         self._netdisk = NetDiskCollector()
+
+        # --filter: case-insensitive substring applied in _top_processes.
+        # Stored lower-cased so the tick-path comparison stays a plain `in`.
+        # None or empty -> no filter.
+        self._process_filter: str | None = (
+            process_filter.strip().lower() if process_filter else None
+        ) or None
 
         # Prime psutil CPU% counters (first call always returns 0.0).
         psutil.cpu_percent(interval=None)
@@ -221,6 +228,11 @@ class SystemCollector:
                     info = proc.info
                     name: str = (info.get("name") or "?").strip()
                     if self._should_filter(name):
+                        continue
+                    if (
+                        self._process_filter is not None
+                        and self._process_filter not in name.lower()
+                    ):
                         continue
                     pct: float = info.get("cpu_percent") or 0.0
                     if pct < 0.1:
