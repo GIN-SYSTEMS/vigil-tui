@@ -21,8 +21,20 @@ CHART_COMBINED_Y_MAX: float = max(CPU_TDP_WATTS, GPU_TDP_WATTS)
 # ── RAM power model: DDR4 ~3.5 W per 8 GB module, utilisation-scaled
 RAM_WATTS_PER_8GB: float = 3.5
 
-# ── Per-core display cap (logical cores)
-MAX_DISPLAY_CORES: int = 16
+# ── Per-core display cap (logical cores). The panel auto-grids and scrolls,
+# so this is just an upper bound to keep the render cheap on absurdly large
+# core counts. Bumped from 16 in #3 to support 32T+ workstations.
+MAX_DISPLAY_CORES: int = 256
+
+# ── Column-count thresholds for the per-core grid.
+# Cores are laid out left-to-right, top-to-bottom. The panel picks the
+# largest column count whose threshold is <= the system's logical core count.
+CPU_GRID_THRESHOLDS: tuple[tuple[int, int], ...] = (
+    (1, 1),    # 1+ cores -> 1 column
+    (17, 2),   # 17+ cores -> 2 columns
+    (33, 3),   # 33+ cores -> 3 columns
+    (65, 4),   # 65+ cores -> 4 columns
+)
 
 # ── Process table ─────────────────────────────────────────────────────────
 PROCESS_TOP_N: int = 10
