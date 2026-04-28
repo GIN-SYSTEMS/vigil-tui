@@ -59,6 +59,20 @@ def _mhz_color(mhz: float, max_mhz: float) -> str:
     return "#2a4a5a"
 
 
+def _grid_columns(core_count: int) -> int:
+    """Return the column count for the per-core grid based on logical cores.
+
+    Picks the largest threshold from `config.CPU_GRID_THRESHOLDS` whose key is
+    <= `core_count`. Defaults to 1 column when no threshold matches (e.g. 0
+    cores reported), so the renderer never divides by zero.
+    """
+    cols = 1
+    for threshold, col_count in config.CPU_GRID_THRESHOLDS:
+        if core_count >= threshold:
+            cols = col_count
+    return max(1, cols)
+
+
 class CPUPanel(Widget):
     """Left-column widget: CPU power summary and per-core utilisation grid."""
 
@@ -163,24 +177,41 @@ class CPUPanel(Widget):
         mhz_list = snap.core_mhz
         max_mhz = snap.max_mhz
 
-        for i, util in enumerate(cores):
-            bar_w = 8
-            filled = int(util / 100 * bar_w)
-            color = _load_color(util)
-
-            t.append(f"C{i:<2}  ", style="#143020")
-            t.append("█" * filled, style=color)
-            t.append("░" * (bar_w - filled), style="#0e1a14")
-            t.append(f" {util:3.0f}%", style=color)
-
-            if i < len(mhz_list) and mhz_list[i] > 0:
-                ghz = mhz_list[i] / 1000.0
-                mhz_col = _mhz_color(mhz_list[i], max_mhz)
-                t.append(f"  {ghz:.1f}G", style=mhz_col)
-
-            t.append("\n")
-
         if not cores:
             t.append("  no per-core data\n", style="#143020")
+            self.query_one("#cpu_cores", Static).update(t)
+            return
+
+        cols = _grid_columns(len(cores))
+        rows = (len(cores) + cols - 1) // cols
+        col_sep = "  "
+        bar_w = 8
+
+        # Render row-major: row i contains cores [i, i+rows, i+2*rows, ...].
+        # This keeps adjacent core indices in the same column for easier
+        # eyeballing of NUMA blocks on high-core systems.
+        for row in range(rows):
+            for col in range(cols):
+                idx = col * rows + row
+                if idx >= len(cores):
+                    continue
+                if col > 0:
+                    t.append(col_sep, style="#0a1810")
+
+                util = cores[idx]
+                filled = int(util / 100 * bar_w)
+                color = _load_color(util)
+
+                t.append(f"C{idx:<2}  ", style="#143020")
+                t.append("█" * filled, style=color)
+                t.append("░" * (bar_w - filled), style="#0e1a14")
+                t.append(f" {util:3.0f}%", style=color)
+
+                if idx < len(mhz_list) and mhz_list[idx] > 0:
+                    ghz = mhz_list[idx] / 1000.0
+                    mhz_col = _mhz_color(mhz_list[idx], max_mhz)
+                    t.append(f"  {ghz:.1f}G", style=mhz_col)
+
+            t.append("\n")
 
         self.query_one("#cpu_cores", Static).update(t)
