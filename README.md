@@ -135,7 +135,7 @@ history_len         = 120      # chart ring-buffer depth
 
 [cost]
 kwh_price           = 2.0      # electricity price per kWh
-currency_symbol     = "₺"
+currency_symbol     = "*"
 
 [alerts]
 webhook_url         = ""       # HTTP POST endpoint — empty = disabled
